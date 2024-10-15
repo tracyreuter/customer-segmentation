@@ -1,0 +1,64 @@
+---
+title: "Choropleth Map Demo"
+header-includes: 
+ \usepackage{geometry}
+ \geometry{top=0.75in,left=0.75in,bottom=0.75in,right=0.75in}
+mainfont: Arial
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# load libraries
+library(knitr)
+library(tidyverse)
+library(mapdata)
+library(maps)
+library(stringr)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# wrangle data
+wi_state <- map_data("state") %>% filter(region == "wisconsin")
+wi_counties <- map_data("county") %>% filter(region == "wisconsin")
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# build base layer
+map_base_layer <- ggplot(
+  # plot state outline
+  data = wi_state, mapping = aes(x = long, y = lat, group = group)) +
+  coord_quickmap() +
+  theme_void() +
+  geom_polygon(color = "black", fill = "#999999") +
+  # plot county outlines
+  geom_polygon(data = wi_counties, fill = NA, color = "black") +
+  geom_polygon(color = "black", fill = NA)
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align='center', fig.width=6, fig.height=6}
+# plot points layer
+wi_schools <- read.csv("choropleth_map_demo_data.csv", header = TRUE)
+map_with_points <- map_base_layer +
+  ggtitle(label = "IPEDS Schools in Wisconsin") +
+  geom_point(data = wi_schools, inherit.aes = FALSE,
+  alpha = 0.75, color = "#147536", size = 5,
+  mapping = aes(x = LONGITUD, y = LATITUDE)) +
+  theme(legend.position = "none")
+# display plot with points
+map_with_points
+```
+\newpage
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.align='center', fig.width=6, fig.height=6}
+# recolor points layer to indicate sector
+map_with_points <- map_base_layer +
+  ggtitle(label = "IPEDS Schools in Wisconsin, by Sector") +
+  geom_point(data = wi_schools, inherit.aes = FALSE,
+  alpha = 0.75, size = 5,
+  mapping = aes(x = LONGITUD, y = LATITUDE, color = SECTOR)) +
+  theme(legend.position = "right")
+# display plot with points
+map_with_points
+```
